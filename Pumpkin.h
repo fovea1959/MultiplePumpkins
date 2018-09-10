@@ -4,11 +4,17 @@
 
 #include <Arduino.h>
 
+#define DEBUG_ON
+
+#include "Debug.h"
+
+
 typedef int Mode;
 #define MODE_NONE 0
 #define MODE_RED 1
 #define MODE_BLUE 2
-#define MODE_TOOHIGH 3
+#define MODE_GREEN 3
+#define MODE_TOOHIGH 4
 
 
 class PumpkinColor
@@ -22,12 +28,7 @@ class PumpkinColor
       return id;
     }
     void print() {
-      Serial.print ("r: ");
-      Serial.print (r);
-      Serial.print (", g: ");
-      Serial.print (g);
-      Serial.print (", b: ");
-      Serial.print (b);
+      Debug << "r: " << r << ", g: " << g << ", b: " << b;
     }
     void clear() {
       r = 0;
@@ -55,7 +56,7 @@ class Pumpkin
 
     int intramodeCounter;
     int intramodeDirection;
-    
+
     PumpkinColor * pC;
     PumpkinParms * pP;
     Mode currentMode = MODE_NONE;
@@ -66,15 +67,11 @@ class Pumpkin
       id = i;
       pP = _pumpkinParms;
       pC = new PumpkinColor(i);
-      Serial.print ("pumpkin ");
-      Serial.print (i);
-      Serial.print (" got pumpkinColor ");
-      Serial.println (pC->getId());
+      Serial << "pumpkin " << i << " got pumpkinColor " << pC->getId() << "\r\n";
     }
 
     void printId() {
-      Serial.print ("Pumpkin ");
-      Serial.print (id);
+      Serial << "Pumpkin " << id;
     }
 
     int getId() {
@@ -104,10 +101,14 @@ class Pumpkin
       bool changeMode = 0;
 
       if (newMode) {
+
+        // should create a intramodeStarttime and initialize it here
+
         // we just switched into this mode
         switch (currentMode) {
           case MODE_BLUE:
           case MODE_RED:
+          case MODE_GREEN:
             intramodeCounter = 0;
             intramodeDirection = 1;
             break;
@@ -121,10 +122,25 @@ class Pumpkin
           changeMode = 1;
           break;
         case MODE_BLUE:
+        case MODE_RED:
+        case MODE_GREEN:
           pC -> clear();
-          pC -> b = intramodeCounter;
 
-          intramodeCounter = intramodeCounter + intramodeDirection;
+          switch (currentMode) {
+            case MODE_BLUE:
+              pC -> b = intramodeCounter;
+              intramodeCounter = intramodeCounter + intramodeDirection;
+              break;
+            case MODE_RED:
+              pC -> r = intramodeCounter;
+              intramodeCounter = intramodeCounter + intramodeDirection * 5;
+              break;
+            case MODE_GREEN:
+              pC -> g = intramodeCounter;
+              intramodeCounter = intramodeCounter + intramodeDirection * 7;
+              break;
+          }
+
           if (intramodeCounter >= 255) {
             intramodeCounter = 255;
             intramodeDirection = -1;
@@ -133,24 +149,13 @@ class Pumpkin
             intramodeDirection = 1;
           }
           break;
-        case MODE_RED:
-          pC -> clear();
-          pC -> r = intramodeCounter;
-
-          intramodeCounter = intramodeCounter + intramodeDirection*2;
-          if (intramodeCounter >= 255) {
-            intramodeCounter = 255;
-            intramodeDirection = -1;
-          } else if (intramodeCounter < 0) {
-            intramodeCounter = 0;
-            intramodeDirection = 1;
-          }
-break;
         default:
           break;
       }
 
       if (changeMode) {
+        // need to look at current enabled modes and do a setMode on
+        // on the next eligible one. if none are eligible, then use MODE_NONE
 
       }
     }

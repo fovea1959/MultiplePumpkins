@@ -1,8 +1,10 @@
 #include <Arduino.h>
+
+#include "Debug.h"
 #include "Pumpkin.h"
 #include "PumpkinLighters.h"
 
-#define N_PUMPKINS 2
+#define N_PUMPKINS 3
 
 Pumpkin * pumpkins[N_PUMPKINS];
 PumpkinLighter * pumpkinLighters[N_PUMPKINS];
@@ -17,21 +19,21 @@ void setup() {
   }
   
   for (int i = 0; i < N_PUMPKINS; i++) {
-    Pumpkin * pumpkin = new Pumpkin(i, new PumpkinParms());
-    pumpkins[i] = pumpkin;
+    pumpkins[i] = new Pumpkin(i, new PumpkinParms());
   }
 
   pumpkins[0]->setMode(MODE_RED);
   pumpkins[1]->setMode(MODE_BLUE);
+  pumpkins[2]->setMode(MODE_GREEN);
 
-  pumpkinLighters[0] = new PumpkinLighter(&pixels, 1, 2, 3);
-  pumpkinLighters[1] = new PumpkinLighter(&pixels, 5, 6, 7);
+  pumpkinLighters[0] = new PumpkinLighter(&pixels, 1, -1, -1);
+  pumpkinLighters[1] = new PumpkinLighter(&pixels, 2, -1, -1);
+  pumpkinLighters[2] = new PumpkinLighter(&pixels, 3, -1, -1);
 
   for (int i = 0; i < N_PUMPKINS; i++) {
-    Serial.print ("pumpkin ");
-    Serial.print (i);
-    Serial.print (" = ");
-    Serial.println (pumpkins[i]->getId());
+
+#ifdef XXXXXX
+    Serial << "pumpkin " << i << " = " << pumpkins[i]->getId() << "\r\n";
 
     Serial.print ("pumpkin ");
     Serial.print (i);
@@ -42,6 +44,7 @@ void setup() {
     Serial.print (", mode = ");
     Serial.print (pumpkins[i]->getCurrentMode());
     Serial.println();
+#endif    
   }
 
   pixels.begin();
@@ -55,13 +58,13 @@ void loop() {
   }
   for (int i = 0; i < N_PUMPKINS; i++) {
     PumpkinColor * pC = pumpkins[i]->getPumpkinColor();
-    Serial.print ("pumpkin ");
-    Serial.print (i);
-    Serial.print (" color = ");
+    
+    Serial << "pumpkin "<< i<< " color = ";
     pC->print();
-    Serial.println();
+    Serial << "\r\n";
+    
     pumpkinLighters[i] -> update (pC);
   }
-  //pixels.setPixelColor (0, 128, 128, 128);
+
   pixels.show();
 }
