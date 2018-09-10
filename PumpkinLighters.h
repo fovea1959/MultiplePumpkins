@@ -24,7 +24,7 @@ class PumpkinLighter {
 #ifdef DEBUG_LIGHTERS      
       Serial.print ("updating Neopixels ");
       Serial.print ((int) c);
-      Serial.print ("r: ");
+      Serial.print (" r: ");
       Serial.print (c->r);
       Serial.print (", g: ");
       Serial.print (c->g);
