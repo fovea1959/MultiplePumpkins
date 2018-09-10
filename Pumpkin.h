@@ -14,7 +14,9 @@ typedef int Mode;
 #define MODE_RED 1
 #define MODE_BLUE 2
 #define MODE_GREEN 3
-#define MODE_TOOHIGH 4
+#define MODE_WHITE 4
+#define MODE_DIMGREY 5
+#define MODE_TOOHIGH 6
 
 
 class PumpkinColor
@@ -54,12 +56,20 @@ class Pumpkin
   private:
     int id;
 
+    // available for use by a mode. the mode is responsible for resetting it at the beginning of the mode.
     int intramodeCounter;
     int intramodeDirection;
+    unsigned long intramodePreviousMillis;
+    boolean intramodeState;
 
+    // set in constructor
     PumpkinColor * pC;
     PumpkinParms * pP;
+
+    // current state
     Mode currentMode = MODE_NONE;
+
+    // set to true when setMode() is called
     bool newMode = 0;
   public:
     Pumpkin(int i, PumpkinParms * _pumpkinParms)
@@ -67,11 +77,7 @@ class Pumpkin
       id = i;
       pP = _pumpkinParms;
       pC = new PumpkinColor(i);
-      Serial << "pumpkin " << i << " got pumpkinColor " << pC->getId() << "\r\n";
-    }
-
-    void printId() {
-      Serial << "Pumpkin " << id;
+      // Serial << "pumpkin " << i << " got pumpkinColor " << pC->getId() << "\r\n";
     }
 
     int getId() {
@@ -89,17 +95,15 @@ class Pumpkin
     void setMode (Mode m) {
       currentMode = m;
       newMode = 1;
-      Serial.print ("setMode called for ");
-      Serial.print (id);
-      Serial.print (", value = ");
-      Serial.println(m);
-
+      Serial << "setMode called for " << id << ", value = " << "\r\n";
     }
 
     void update()
     {
       bool changeMode = 0;
+      unsigned long currentMillis = millis();
 
+      // we just set a new mode. set up any intramode* variables
       if (newMode) {
 
         // should create a intramodeStarttime and initialize it here
@@ -112,6 +116,10 @@ class Pumpkin
             intramodeCounter = 0;
             intramodeDirection = 1;
             break;
+          case MODE_DIMGREY:
+            intramodePreviousMillis = millis();
+            intramodeState = 0;
+            break;
         }
         newMode = 0;
 
@@ -119,6 +127,8 @@ class Pumpkin
 
       switch (currentMode) {
         case MODE_NONE:
+          pC -> clear();
+
           changeMode = 1;
           break;
         case MODE_BLUE:
@@ -147,6 +157,20 @@ class Pumpkin
           } else if (intramodeCounter < 0) {
             intramodeCounter = 0;
             intramodeDirection = 1;
+          }
+          break;
+        case MODE_WHITE:
+          pC -> clear();
+          pC -> r = pC -> g = pC -> b = 255;
+          break;
+        case MODE_DIMGREY:
+          pC -> clear();
+          if (currentMillis - intramodePreviousMillis >= 500) {
+            intramodeState = !intramodeState;
+            intramodePreviousMillis = currentMillis;
+          }
+          if (intramodeState) {
+            pC -> r = pC -> g = pC -> b = 16;
           }
           break;
         default:

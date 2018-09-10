@@ -4,7 +4,7 @@
 #include "Pumpkin.h"
 #include "PumpkinLighters.h"
 
-#define N_PUMPKINS 3
+#define N_PUMPKINS 5
 
 Pumpkin * pumpkins[N_PUMPKINS];
 PumpkinLighter * pumpkinLighters[N_PUMPKINS];
@@ -25,10 +25,14 @@ void setup() {
   pumpkins[0]->setMode(MODE_RED);
   pumpkins[1]->setMode(MODE_BLUE);
   pumpkins[2]->setMode(MODE_GREEN);
+  pumpkins[3]->setMode(MODE_WHITE);
+  pumpkins[4]->setMode(MODE_DIMGREY);
 
   pumpkinLighters[0] = new PumpkinLighter(&pixels, 1, -1, -1);
   pumpkinLighters[1] = new PumpkinLighter(&pixels, 2, -1, -1);
   pumpkinLighters[2] = new PumpkinLighter(&pixels, 3, -1, -1);
+  pumpkinLighters[3] = new PumpkinLighter(&pixels, 7, -1, -1);
+  pumpkinLighters[4] = new PumpkinLighter(&pixels, 4, -1, -1);
 
   for (int i = 0; i < N_PUMPKINS; i++) {
 
