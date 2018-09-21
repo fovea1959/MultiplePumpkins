@@ -4,7 +4,7 @@
 #include "Pumpkin.h"
 #include "PumpkinLighters.h"
 
-#define N_PUMPKINS 5
+#define N_PUMPKINS 2
 
 Pumpkin * pumpkins[N_PUMPKINS];
 PumpkinLighter * pumpkinLighters[N_PUMPKINS];
@@ -22,17 +22,17 @@ void setup() {
     pumpkins[i] = new Pumpkin(i, new PumpkinParms());
   }
 
-  pumpkins[0]->setMode(MODE_RED);
-  pumpkins[1]->setMode(MODE_BLUE);
-  pumpkins[2]->setMode(MODE_GREEN);
-  pumpkins[3]->setMode(MODE_WHITE);
-  pumpkins[4]->setMode(MODE_DIMGREY);
+  pumpkins[0]->setMode(MODE_DIMGREY);
+  pumpkins[1]->setMode(MODE_RED);
+//  pumpkins[2]->setMode(MODE_GREEN);
+//  pumpkins[3]->setMode(MODE_WHITE);
+//  pumpkins[4]->setMode(MODE_DIMGREY);
 
   pumpkinLighters[0] = new PumpkinLighter(&pixels, 1, -1, -1);
   pumpkinLighters[1] = new PumpkinLighter(&pixels, 2, -1, -1);
-  pumpkinLighters[2] = new PumpkinLighter(&pixels, 3, -1, -1);
-  pumpkinLighters[3] = new PumpkinLighter(&pixels, 7, -1, -1);
-  pumpkinLighters[4] = new PumpkinLighter(&pixels, 4, -1, -1);
+//  pumpkinLighters[2] = new PumpkinLighter(&pixels, 3, -1, -1);
+//  pumpkinLighters[3] = new PumpkinLighter(&pixels, 7, -1, -1);
+//  pumpkinLighters[4] = new PumpkinLighter(&pixels, 4, -1, -1);
 
   for (int i = 0; i < N_PUMPKINS; i++) {
 
@@ -52,6 +52,10 @@ void setup() {
   }
 
   pixels.begin();
+  for (int i = 0; i < 8; i++) {
+    pixels.setPixelColor(i, 0, 0, 0);
+  }
+  pixels.show();
   
 }
 
@@ -62,10 +66,12 @@ void loop() {
   }
   for (int i = 0; i < N_PUMPKINS; i++) {
     PumpkinColor * pC = pumpkins[i]->getPumpkinColor();
-    
+
+#ifdef xxx
     Serial << "pumpkin "<< i<< " color = ";
     pC->print();
     Serial << "\r\n";
+#endif
     
     pumpkinLighters[i] -> update (pC);
   }

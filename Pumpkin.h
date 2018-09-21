@@ -8,29 +8,37 @@
 
 #include "Debug.h"
 
-
-typedef int Mode;
-#define MODE_NONE 0
-#define MODE_RED 1
-#define MODE_BLUE 2
-#define MODE_GREEN 3
-#define MODE_WHITE 4
-#define MODE_DIMGREY 5
-#define MODE_TOOHIGH 6
-
-
 class PumpkinColor
 {
   public:
     int id, r, g, b, y, uv;
     PumpkinColor(uint8_t _id) {
       id = _id + 10;
+      clear();
     }
     int getId() {
       return id;
     }
+    void setR (int v) {
+      r = v;
+    }
+    void setG (int v) {
+      g = v;
+    }
+    void setB (int v) {
+      b = v;
+    }
+    void setY (int v) {
+      y = v;
+    }
+    void setUv (int v) {
+      uv = v;
+    }
+    void updateLeds() {
+      
+    }
     void print() {
-      Debug << "r: " << r << ", g: " << g << ", b: " << b;
+      Serial << "r: " << r << ", g: " << g << ", b: " << b;
     }
     void clear() {
       r = 0;
@@ -51,26 +59,117 @@ class PumpkinParms
     }
 };
 
+int bumpAndLimit (int v, int b, int ll, int ul) {
+  v += b;
+  if (v < ll) {
+    return ll;
+  } else if (v > ul) {
+    return ul;
+  } else {
+    return v;
+  }
+}
+
+
+typedef int Mode;
+#define MODE_NONE 0
+#define MODE_RED 1
+//#define MODE_BLUE 2
+//#define MODE_GREEN 3
+//#define MODE_WHITE 4
+#define MODE_DIMGREY 2
+#define MODE_TOOHIGH 3
+
+// generic superclass
+class ModeCode
+{
+  public:
+    virtual void init(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) { };
+    virtual bool update(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) { };
+    virtual void finish(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) { };
+    virtual void printWhoIAm() { Serial.println ("superclass"); };
+};
+
+class ModeNoneCode : public ModeCode
+{
+  public:
+    bool loop(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) {
+      pumpkinColor->clear();
+      return 1; // switch modes
+    }
+    void printWhoIAm() { Serial.println ("None"); };
+};
+class ModeRedCode : public ModeCode
+{
+  private:
+    int counter, direction;
+
+  public:
+    void init(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
+      counter = 0;
+      direction = 1;
+      pC->clear();
+    }
+    bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
+      counter = bumpAndLimit (counter, direction, 0, 255);
+      pC->setR(counter);
+      if (counter <= 0 || counter >= 255) {
+        direction = -direction;
+      }
+
+      return false;
+    }
+    void printWhoIAm() { Serial.println ("Red Code"); };
+};
+
+class ModeDimGreyCode : public ModeCode
+{
+  private:
+    int startMillis;
+  public:
+    void init(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
+      pC->clear();
+      startMillis = millis();
+    }
+    bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
+      pC->clear();
+      int elapsedMillis = millis() - startMillis;
+      Serial.print("elapsed millis = ");
+      Serial.println (elapsedMillis);
+      if (elapsedMillis % 1000 > 500) {
+       Serial.println("turning on");
+       pC->setR(16);
+       pC->setG(16);
+       pC->setB(16);
+      } else {
+       Serial.println("turning off");
+
+      }
+      return false;
+    }
+    void printWhoIAm() { Serial.println ("DimGrey Code"); };
+};
+
 class Pumpkin
 {
   private:
     int id;
 
-    // available for use by a mode. the mode is responsible for resetting it at the beginning of the mode.
-    int intramodeCounter;
-    int intramodeDirection;
-    unsigned long intramodePreviousMillis;
-    boolean intramodeState;
-
     // set in constructor
     PumpkinColor * pC;
     PumpkinParms * pP;
 
+    ModeNoneCode modeNoneCode;
+    ModeRedCode modeRedCode;
+    ModeDimGreyCode modeDimGreyCode;
+    
     // current state
-    Mode currentMode = MODE_NONE;
+    ModeCode * currentModeCode;
+    Mode currentMode;
 
-    // set to true when setMode() is called
-    bool newMode = 0;
+    // setMode was called
+    bool modeWasChanged;
+
   public:
     Pumpkin(int i, PumpkinParms * _pumpkinParms)
     {
@@ -78,6 +177,11 @@ class Pumpkin
       pP = _pumpkinParms;
       pC = new PumpkinColor(i);
       // Serial << "pumpkin " << i << " got pumpkinColor " << pC->getId() << "\r\n";
+
+      currentMode = MODE_NONE;
+      currentModeCode = &modeNoneCode;
+
+      modeWasChanged = 0;
     }
 
     int getId() {
@@ -94,94 +198,42 @@ class Pumpkin
 
     void setMode (Mode m) {
       currentMode = m;
-      newMode = 1;
-      Serial << "setMode called for " << id << ", value = " << "\r\n";
+      modeWasChanged = 1;
+      Serial << "setMode called for " << m << "\r\n";
     }
 
     void update()
     {
-      bool changeMode = 0;
       unsigned long currentMillis = millis();
 
-      // we just set a new mode. set up any intramode* variables
-      if (newMode) {
-
-        // should create a intramodeStarttime and initialize it here
-
-        // we just switched into this mode
+      if (modeWasChanged) {
+        currentModeCode->finish(pP, pC);
         switch (currentMode) {
-          case MODE_BLUE:
+          case MODE_NONE:
+            currentModeCode = &modeNoneCode;
+            break;
           case MODE_RED:
-          case MODE_GREEN:
-            intramodeCounter = 0;
-            intramodeDirection = 1;
+            currentModeCode = &modeRedCode;
             break;
           case MODE_DIMGREY:
-            intramodePreviousMillis = millis();
-            intramodeState = 0;
+            currentModeCode = &modeDimGreyCode;
             break;
-        }
-        newMode = 0;
-
+          default:
+            Serial.print("unhandled newMode: ");
+            Serial.println(currentMode);
+            currentModeCode = &modeNoneCode;
+        } 
+        currentModeCode->init(pP, pC);
+        modeWasChanged = 0;
       }
 
-      switch (currentMode) {
-        case MODE_NONE:
-          pC -> clear();
-
-          changeMode = 1;
-          break;
-        case MODE_BLUE:
-        case MODE_RED:
-        case MODE_GREEN:
-          pC -> clear();
-
-          switch (currentMode) {
-            case MODE_BLUE:
-              pC -> b = intramodeCounter;
-              intramodeCounter = intramodeCounter + intramodeDirection;
-              break;
-            case MODE_RED:
-              pC -> r = intramodeCounter;
-              intramodeCounter = intramodeCounter + intramodeDirection * 5;
-              break;
-            case MODE_GREEN:
-              pC -> g = intramodeCounter;
-              intramodeCounter = intramodeCounter + intramodeDirection * 7;
-              break;
-          }
-
-          if (intramodeCounter >= 255) {
-            intramodeCounter = 255;
-            intramodeDirection = -1;
-          } else if (intramodeCounter < 0) {
-            intramodeCounter = 0;
-            intramodeDirection = 1;
-          }
-          break;
-        case MODE_WHITE:
-          pC -> clear();
-          pC -> r = pC -> g = pC -> b = 255;
-          break;
-        case MODE_DIMGREY:
-          pC -> clear();
-          if (currentMillis - intramodePreviousMillis >= 500) {
-            intramodeState = !intramodeState;
-            intramodePreviousMillis = currentMillis;
-          }
-          if (intramodeState) {
-            pC -> r = pC -> g = pC -> b = 16;
-          }
-          break;
-        default:
-          break;
-      }
-
+      bool changeMode = currentModeCode->update(pP, pC);
+      // currentModeCode->printWhoIAm();
       if (changeMode) {
         // need to look at current enabled modes and do a setMode on
         // on the next eligible one. if none are eligible, then use MODE_NONE
-
       }
+
     }
 };
 

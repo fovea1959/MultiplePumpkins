@@ -7,7 +7,7 @@
 
 #include "Debug.h"
 
-#define DEBUG_LIGHTERS
+// #define DEBUG_LIGHTERS
 
 class PumpkinLighter {
   private:
@@ -22,7 +22,6 @@ class PumpkinLighter {
       uv_index = _uv_index;
     }
     void update(PumpkinColor * c) {
-      Serial << "update called\r\n";
 #ifdef DEBUG_LIGHTERS      
       Serial << "updating Neopixels " << ((int) c) << " r: " << c->r << ", g: " << c->g <<", b: " << c->b << "\r\n";
 #endif
