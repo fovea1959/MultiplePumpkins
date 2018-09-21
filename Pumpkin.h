@@ -73,12 +73,12 @@ int bumpAndLimit (int v, int b, int ll, int ul) {
 
 typedef int Mode;
 #define MODE_NONE 0
-#define MODE_RED 1
-//#define MODE_BLUE 2
-//#define MODE_GREEN 3
+#define MODE_DIMGREY 1
+#define MODE_RED 2
+#define MODE_BLUE 3
+#define MODE_GREEN 4
 //#define MODE_WHITE 4
-#define MODE_DIMGREY 2
-#define MODE_TOOHIGH 3
+#define MODE_TOOHIGH 5
 
 // generic superclass
 class ModeCode
@@ -122,10 +122,58 @@ class ModeRedCode : public ModeCode
     void printWhoIAm() { Serial.println ("Red Code"); };
 };
 
+class ModeBlueCode : public ModeCode
+{
+  private:
+    int counter, direction;
+
+  public:
+    void init(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
+      counter = 0;
+      direction = 7;
+      pC->clear();
+    }
+    bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
+      counter = bumpAndLimit (counter, direction, 0, 255);
+      Serial << "blue counter: " << counter << "\r\n";
+      pC->setB(counter);
+      if (counter <= 0 || counter >= 255) {
+        direction = -direction;
+      }
+
+      return false;
+    }
+    void printWhoIAm() { Serial.println ("Blue Code"); };
+};
+
+class ModeGreenCode : public ModeCode
+{
+  private:
+    int counter, direction;
+
+  public:
+    void init(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
+      counter = 0;
+      direction = 2;
+      pC->clear();
+    }
+    bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
+      counter = bumpAndLimit (counter, direction, 0, 255);
+      Serial << "green counter: " << counter << "\r\n";
+      pC->setG(counter);
+      if (counter <= 0 || counter >= 255) {
+        direction = -direction;
+      }
+
+      return false;
+    }
+    void printWhoIAm() { Serial.println ("Green Code"); };
+};
+
 class ModeDimGreyCode : public ModeCode
 {
   private:
-    int startMillis;
+    unsigned long startMillis;
   public:
     void init(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
       pC->clear();
@@ -134,16 +182,10 @@ class ModeDimGreyCode : public ModeCode
     bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
       pC->clear();
       int elapsedMillis = millis() - startMillis;
-      Serial.print("elapsed millis = ");
-      Serial.println (elapsedMillis);
       if (elapsedMillis % 1000 > 500) {
-       Serial.println("turning on");
        pC->setR(16);
        pC->setG(16);
        pC->setB(16);
-      } else {
-       Serial.println("turning off");
-
       }
       return false;
     }
@@ -161,6 +203,8 @@ class Pumpkin
 
     ModeNoneCode modeNoneCode;
     ModeRedCode modeRedCode;
+    ModeBlueCode modeBlueCode;
+    ModeGreenCode modeGreenCode;
     ModeDimGreyCode modeDimGreyCode;
     
     // current state
@@ -214,6 +258,12 @@ class Pumpkin
             break;
           case MODE_RED:
             currentModeCode = &modeRedCode;
+            break;
+          case MODE_BLUE:
+            currentModeCode = &modeBlueCode;
+            break;
+          case MODE_GREEN:
+            currentModeCode = &modeGreenCode;
             break;
           case MODE_DIMGREY:
             currentModeCode = &modeDimGreyCode;
