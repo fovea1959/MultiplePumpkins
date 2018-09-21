@@ -8,94 +8,87 @@
 
 #include "Debug.h"
 
-class ModeInterval {
-  private:
-    ModeInterval * next;
-    int tlength; // length of time this mode should be run
-    int variation; // width of variation around tlength
-    int mode; // what mode
-  public:
-    ModeInterval (int _mode, int _tlength) {
-      next = NULL;
-      mode = _mode;
-      tlength = _tlength;
-      variation = 0;
-    }
-    ModeInterval (int _mode, int _tlength, int _variation) {
-      next = NULL;
-      mode = _mode;
-      tlength = _tlength;
-      variation = _variation;
-    }
-    void setNext( ModeInterval * _next) {
-      next = _next;
-    }
-    ModeInterval * getNext() {
-      return next;
-    }
-    int getMode() {
-      return mode;
-    }
-    int getTLength() {
-      return tlength;
-    }
-    int getVariation() {
-      return variation;
-    }
-    void print() {
-      Serial << "mode interval: " << mode << ", tlength: " << tlength << ", variation: " << variation;
-    }
-};
+#include "PumpkinParms.h"
+#include "ModeInterval.h"
 
-class PumpkinParms {
-  private:
-    int id;
-    ModeInterval * firstMi; // beginning of LL
-    ModeInterval * lastMi; // end of LL
-    int nMi;
-  public:
-    PumpkinParms(int _id) {
-      id = _id;
-      firstMi = NULL;
-      lastMi = NULL;
-      nMi = 0;
-    }
-    void add (ModeInterval * _mi) {
-      if (lastMi == NULL) {
-        firstMi = _mi;
-        lastMi = _mi;
-      } else {
-        lastMi->setNext(_mi);
-        lastMi = _mi;
-      }
-      nMi++;
-    }
-    void print() {
-      Serial << "Pumpkin parms #" << id << "\r\n";
-      ModeInterval * t = firstMi;
-      while (t != NULL) {
-        t->print();
-        t = t->getNext();
-        Serial.println();
-      }
-    }
-    ModeInterval * getModeInterval(int _n) {
-      ModeInterval * t = firstMi;
-      int i = 0;
-      while (t != NULL && i < _n) {
-        t = t->getNext();
-        i++;
-      }
-      return t;
-    }
-    ModeInterval * getRandomModeInterval() {
-      int i = random(nMi);
-      return getModeInterval(i);
-    }
-    int modeIntervalCount() {
-      return nMi;
-    }
-};
+/* -------------------------- PumpkinParms methods ----------------------------- */
+
+PumpkinParms::PumpkinParms(int _id) {
+  id = _id;
+  firstMi = NULL;
+  lastMi = NULL;
+  nMi = 0;
+}
+void PumpkinParms::add (ModeInterval * _mi) {
+  if (lastMi == NULL) {
+    firstMi = _mi;
+    lastMi = _mi;
+  } else {
+    lastMi->setNext(_mi);
+    lastMi = _mi;
+  }
+  nMi++;
+}
+void PumpkinParms::print() {
+  Serial << "Pumpkin parms #" << id << "\r\n";
+  ModeInterval * t = firstMi;
+  while (t != NULL) {
+    t->print();
+    t = t->getNext();
+    Serial.println();
+  }
+}
+ModeInterval * PumpkinParms::getModeInterval(int _n) {
+  ModeInterval * t = firstMi;
+  int i = 0;
+  while (t != NULL && i < _n) {
+    t = t->getNext();
+    i++;
+  }
+  return t;
+}
+ModeInterval * PumpkinParms::getRandomModeInterval() {
+  int i = random(nMi);
+  return getModeInterval(i);
+}
+int PumpkinParms::modeIntervalCount() {
+  return nMi;
+}
+
+/* -------------------------- ModeInterval methods ----------------------------- */
+ModeInterval::ModeInterval (int _mode, int _tlength) {
+  next = NULL;
+  mode = _mode;
+  tlength = _tlength;
+  variation = 0;
+}
+ModeInterval::ModeInterval (int _mode, int _tlength, int _variation) {
+  next = NULL;
+  mode = _mode;
+  tlength = _tlength;
+  variation = _variation;
+}
+void ModeInterval::setNext( ModeInterval * _next) {
+  next = _next;
+}
+ModeInterval * ModeInterval::getNext() {
+  return next;
+}
+int ModeInterval::getMode() {
+  return mode;
+}
+int ModeInterval::getTLength() {
+  return tlength;
+}
+int ModeInterval::getVariation() {
+  return variation;
+}
+void ModeInterval::print() {
+  Serial << "mode interval: " << mode << ", tlength: " << tlength << ", variation: " << variation;
+}
+
+
+
 
 class PumpkinColor
 {
