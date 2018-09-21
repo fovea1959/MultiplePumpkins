@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
+#include "PumpkinColor.h"
 #include "Debug.h"
 
 // #define DEBUG_LIGHTERS
@@ -25,12 +26,12 @@ class PumpkinLighter {
 #ifdef DEBUG_LIGHTERS      
       Serial << "updating Neopixels " << ((int) c) << " r: " << c->r << ", g: " << c->g <<", b: " << c->b << "\r\n";
 #endif
-      string->setPixelColor (rgb_index, c->r, c->g, c->b);
+      string->setPixelColor (rgb_index, c->getR(), c->getG(), c->getB());
       if (y_index >= 0) {
-        string->setPixelColor (y_index, c->y, c->y, c->y);
+        string->setPixelColor (y_index, c->getY(), c->getY(), c->getY());
       }
       if (uv_index >= 0) {
-        string->setPixelColor (uv_index, c->uv, c->uv, c->uv);
+        string->setPixelColor (uv_index, c->getUv(), c->getUv(), c->getUv());
       }
     }
 };
