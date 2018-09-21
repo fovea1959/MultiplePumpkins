@@ -4,7 +4,7 @@
 #include "PumpkinLighters.h"
 
 
-#define N_PUMPKINS 8
+#define N_PUMPKINS 6
 
 #define YES
 
@@ -48,13 +48,18 @@ void setup() {
   pumpkinParms[4]->add(new ModeInterval(MODE_DIMGREY, 5000));
   pumpkinParms[4]->add(new ModeInterval(MODE_RED, 5000, 5000));
 
-  pumpkinParms[7]->add(new ModeInterval(MODE_RAINBOW, ULONG_MAX));
+  pumpkinParms[5]->add(new ModeInterval(MODE_RAINBOW, ULONG_MAX));
 
   for (int i = 0; i < N_PUMPKINS; i++) {
     pumpkins[i] = new Pumpkin(i, pumpkinParms[i]);
-    pumpkinLighters[i] = new PumpkinLighter(&pixels, i, -1, -1);
   }
 
+  pumpkinLighters[0] = new PumpkinLighter(&pixels, 0, -1, -1);
+  pumpkinLighters[1] = new PumpkinLighter(&pixels, 1, -1, -1);
+  pumpkinLighters[2] = new PumpkinLighter(&pixels, 2, -1, -1);
+  pumpkinLighters[3] = new PumpkinLighter(&pixels, 3, -1, -1);
+  pumpkinLighters[4] = new PumpkinLighter(&pixels, 4, -1, -1);
+  pumpkinLighters[5] = new PumpkinLighter(&pixels, 5, 3, -1, -1);
 
 #ifdef DEBUG1
   for (int i = 0; i < N_PUMPKINS; i++) {
