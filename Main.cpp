@@ -6,6 +6,8 @@
 
 #define N_PUMPKINS 4
 
+#define YES
+
 Pumpkin * pumpkins[N_PUMPKINS];
 PumpkinParms * pumpkinParms[N_PUMPKINS];
 PumpkinLighter * pumpkinLighters[N_PUMPKINS];
@@ -24,9 +26,10 @@ void setup() {
     pumpkinParms[i] = new PumpkinParms(i);
   }
 
-  pumpkinParms[0]->add(new ModeInterval(MODE_DIMGREY, 1000));
-  pumpkinParms[0]->add(new ModeInterval(MODE_RED, 1000));
+  pumpkinParms[0]->add(new ModeInterval(MODE_DIMGREY, 5000));
+  pumpkinParms[0]->add(new ModeInterval(MODE_RED, 5000, 5000));
 
+#ifdef DEBUG1
   Serial.println("mode 0 test");
   pumpkinParms[0]->print();
   Serial.println("retest");
@@ -35,11 +38,11 @@ void setup() {
     pumpkinParms[0]->getModeInterval(i)->print();
     Serial.println();
   }
+#endif
   
-  pumpkinParms[1]->add(new ModeInterval(MODE_RED, 1000));
+  pumpkinParms[1]->add(new ModeInterval(MODE_RED, 5000, 2000));
   pumpkinParms[2]->add(new ModeInterval(MODE_BLUE, 1000));
   pumpkinParms[3]->add(new ModeInterval(MODE_GREEN, 1000));
-
 
   for (int i = 0; i < N_PUMPKINS; i++) {
     pumpkins[i] = new Pumpkin(i, pumpkinParms[i]);
@@ -51,9 +54,8 @@ void setup() {
   pumpkinLighters[3] = new PumpkinLighter(&pixels, 3, -1, -1);
 //  pumpkinLighters[4] = new PumpkinLighter(&pixels, 4, -1, -1);
 
+#ifdef DEBUG1
   for (int i = 0; i < N_PUMPKINS; i++) {
-
-#ifdef XXXXXX
     Serial << "pumpkin " << i << " = " << pumpkins[i]->getId() << "\r\n";
 
     Serial.print ("pumpkin ");
@@ -65,8 +67,8 @@ void setup() {
     Serial.print (", mode = ");
     Serial.print (pumpkins[i]->getCurrentMode());
     Serial.println();
-#endif    
   }
+#endif    
 
   pixels.begin();
   for (int i = 0; i < 8; i++) {
@@ -82,8 +84,8 @@ void setup() {
 void loop() {
   unsigned long now = millis();
   if (now - lastMillis > 10) {
-    int n_pumpkins = 1;
-for (int i = 0; i < n_pumpkins; i++) {
+    int n_pumpkins = N_PUMPKINS;
+    for (int i = 0; i < n_pumpkins; i++) {
       pumpkins[i] -> update();
     }
     for (int i = 0; i < n_pumpkins; i++) {

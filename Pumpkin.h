@@ -157,8 +157,6 @@ typedef int Mode;
 #define MODE_RED 2
 #define MODE_BLUE 3
 #define MODE_GREEN 4
-//#define MODE_WHITE 4
-#define MODE_TOOHIGH 5
 
 char * modeString(Mode _m) {
   switch (_m) {
@@ -189,18 +187,19 @@ class ModeCode
     virtual void init(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) { };
     virtual bool update(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) { };
     virtual void finish(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) { };
-    virtual void printWhoIAm() { Serial.println ("superclass"); };
+    virtual char * whoIAm() { return "superclass"; }
 };
 
 class ModeNoneCode : public ModeCode
 {
   public:
-    bool loop(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) {
+    bool update(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) {
       pumpkinColor->clear();
-      return true; // switch modes
+      return true; // switch modes immediately
     }
-    void printWhoIAm() { Serial.println ("None"); };
+    char * whoIAm() { return "None Code"; }
 };
+
 class ModeRedCode : public ModeCode
 {
   private:
@@ -220,7 +219,7 @@ class ModeRedCode : public ModeCode
       }
       return counter <= 0;
     }
-    void printWhoIAm() { Serial.println ("Red Code"); };
+    char * whoIAm() { return "Red Code"; }
 };
 
 class ModeBlueCode : public ModeCode
@@ -243,7 +242,7 @@ class ModeBlueCode : public ModeCode
 
       return counter <= 0;
     }
-    void printWhoIAm() { Serial.println ("Blue Code"); };
+    char * whoIAm() { return "Blue Code"; }
 };
 
 class ModeGreenCode : public ModeCode
@@ -266,7 +265,7 @@ class ModeGreenCode : public ModeCode
 
       return counter <= 0;
     }
-    void printWhoIAm() { Serial.println ("Green Code"); };
+    char * whoIAm() { return "Green Code"; }
 };
 
 class ModeDimGreyCode : public ModeCode
@@ -290,7 +289,7 @@ class ModeDimGreyCode : public ModeCode
       }
       return true;
     }
-    void printWhoIAm() { Serial.println ("DimGrey Code"); };
+    char * whoIAm() { return "Dim Grey"; }
 };
 
 class Pumpkin
@@ -333,6 +332,11 @@ class Pumpkin
       newMode = MODE_NONE;
       modeWasChanged = 1;
       modeChangeMillis = 0;
+
+      ModeCode * mc1 = &modeNoneCode;
+      ModeCode * mc2 = &modeRedCode;
+      Serial << "generic: " << mc1->whoIAm() << ", " << mc2->whoIAm() << "\r\n";
+      Serial << "typed: " << modeNoneCode.whoIAm() << ", " << modeRedCode.whoIAm() << "\r\n";
     }
 
     int getId() {
@@ -353,12 +357,15 @@ class Pumpkin
       Serial << "setMode called for " << m << "\r\n";
     }
 
+#undef DEBUG_PUMPKIN
     void update()
     {
       unsigned long currentMillis = millis();
 
       if (modeWasChanged) {
+#ifdef DEBUG_PUMPKIN
         Serial << "mode was changed. setting up for mode " << newMode << " " << modeString(newMode) << "\r\n";
+#endif
         currentModeCode->finish(pP, pC);
         switch (newMode) {
           case MODE_NONE:
@@ -385,33 +392,41 @@ class Pumpkin
         modeWasChanged = 0;
       }
 
-      if (false) {
-        Serial << "running: ";
-        currentModeCode->printWhoIAm();
-      }
+#ifdef DEBUG_PUMPKIN
+        Serial << "running: " << currentModeCode->whoIAm() << "\r\n";
+#endif
       
       bool okToChange = currentModeCode->update(pP, pC);
 
-      if (false) {
+#ifdef DEBUG_PUMPKIN
         Serial << "colors: ";
         pC->print();
         Serial.println();
-      }
+#endif
       
       if (okToChange && (currentMillis > modeChangeMillis)) {
+#ifdef DEBUG_PUMPKIN
         Serial << "ok to change: " << okToChange << ", current millis = " << currentMillis << ", mode change millis: " << modeChangeMillis << "\r\n";
+#endif
         ModeInterval * mi = pP->getRandomModeInterval();
-        
+
+#ifdef DEBUG_PUMPKIN
         Serial << "got modeInterval ";
         mi->print();
         Serial.println();
+#endif
 
         modeWasChanged = 1;
         newMode = mi-> getMode();
         int tlength = mi -> getTLength();
         int variation = mi -> getVariation();
-        modeChangeMillis = currentMillis + tlength + random(variation);
+        int v = random(variation) - (variation / 2);
+        if (v < 0) v = 0;
+        modeChangeMillis = currentMillis + tlength + v;
+
+#ifdef DEBUG_PUMPKIN
         Serial << "mode " << newMode << modeString(newMode) << " was picked, next change at " << modeChangeMillis << "\r\n";
+#endif
       }
 
     }
