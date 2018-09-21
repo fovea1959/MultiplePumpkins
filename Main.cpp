@@ -8,6 +8,7 @@
 
 Pumpkin * pumpkins[N_PUMPKINS];
 PumpkinLighter * pumpkinLighters[N_PUMPKINS];
+unsigned long lastMillis;
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(8, 6, NEO_GRB + NEO_KHZ800);
 
@@ -56,25 +57,25 @@ void setup() {
     pixels.setPixelColor(i, 0, 0, 0);
   }
   pixels.show();
+
+  lastMillis = millis();
   
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  for (int i = 0; i < N_PUMPKINS; i++) {
-    pumpkins[i] -> update();
+  unsigned long now = millis();
+  if (now - lastMillis > 10) {
+    for (int i = 0; i < N_PUMPKINS; i++) {
+      pumpkins[i] -> update();
+    }
+    for (int i = 0; i < N_PUMPKINS; i++) {
+      PumpkinColor * pC = pumpkins[i]->getPumpkinColor();
+      pumpkinLighters[i] -> update (pC);
+    }
+  
+    pixels.show();
+    lastMillis = now;
+  } else {
+    delay(1);
   }
-  for (int i = 0; i < N_PUMPKINS; i++) {
-    PumpkinColor * pC = pumpkins[i]->getPumpkinColor();
-
-#ifdef xxx
-    Serial << "pumpkin "<< i<< " color = ";
-    pC->print();
-    Serial << "\r\n";
-#endif
-    
-    pumpkinLighters[i] -> update (pC);
-  }
-
-  pixels.show();
 }

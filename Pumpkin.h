@@ -135,7 +135,6 @@ class ModeBlueCode : public ModeCode
     }
     bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
       counter = bumpAndLimit (counter, direction, 0, 255);
-      Serial << "blue counter: " << counter << "\r\n";
       pC->setB(counter);
       if (counter <= 0 || counter >= 255) {
         direction = -direction;
@@ -159,7 +158,6 @@ class ModeGreenCode : public ModeCode
     }
     bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
       counter = bumpAndLimit (counter, direction, 0, 255);
-      Serial << "green counter: " << counter << "\r\n";
       pC->setG(counter);
       if (counter <= 0 || counter >= 255) {
         direction = -direction;
@@ -182,7 +180,6 @@ class ModeDimGreyCode : public ModeCode
     bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
       pC->clear();
       unsigned long elapsedMillis = millis() - startMillis;
-      Serial << "unsigned millis: " << elapsedMillis << "\r\n";
       if (elapsedMillis % 1000 > 500) {
        pC->setR(16);
        pC->setG(16);
@@ -214,6 +211,7 @@ class Pumpkin
 
     // setMode was called
     bool modeWasChanged;
+    Mode newMode;
 
   public:
     Pumpkin(int i, PumpkinParms * _pumpkinParms)
@@ -242,7 +240,7 @@ class Pumpkin
     }
 
     void setMode (Mode m) {
-      currentMode = m;
+      newMode = m;
       modeWasChanged = 1;
       Serial << "setMode called for " << m << "\r\n";
     }
@@ -253,7 +251,7 @@ class Pumpkin
 
       if (modeWasChanged) {
         currentModeCode->finish(pP, pC);
-        switch (currentMode) {
+        switch (newMode) {
           case MODE_NONE:
             currentModeCode = &modeNoneCode;
             break;
@@ -274,6 +272,7 @@ class Pumpkin
             Serial.println(currentMode);
             currentModeCode = &modeNoneCode;
         } 
+        currentMode = newMode;
         currentModeCode->init(pP, pC);
         modeWasChanged = 0;
       }
