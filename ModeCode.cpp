@@ -29,6 +29,9 @@ char * modeString(Mode _m) {
     case MODE_GREEN:
       return "GREEN";
       break;
+    case MODE_RAINBOW:
+      return "RAINBOW";
+      break;
     default:
       return "Unknown";
   } 
@@ -37,6 +40,7 @@ char * modeString(Mode _m) {
 // generic superclass
 void ModeCode::init(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) { };
 bool ModeCode::update(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) { };
+void ModeCode::requestModeEnd() { };
 void ModeCode::finish(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) { };
 char * ModeCode::whoIAm() { return "superclass"; }
 
@@ -112,4 +116,3 @@ bool ModeDimGreyCode::update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
   return true;
 }
 char * ModeDimGreyCode::whoIAm() { return "Dim Grey"; }
-

@@ -3,6 +3,9 @@
 #define Pumpkin_h
 
 #include <Arduino.h>
+#include <Adafruit_NeoPixel.h>
+#include <limits.h>
+#include "elapsedMillis.h"
 
 #define DEBUG_ON
 
@@ -26,20 +29,40 @@ class DummyStream {
 } Debug;
 #endif
 
+// https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both
+// see Shonn's answer
+typedef struct RgbColor
+{
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+} RgbColor;
+
+typedef struct HsvColor
+{
+    unsigned char h;
+    unsigned char s;
+    unsigned char v;
+} HsvColor;
+
+
+void HsvToRgb(HsvColor hsv, RgbColor* rgb);
+
+
 class ModeInterval {
   private:
     ModeInterval * next;
-    int tlength; // length of time this mode should be run
-    int variation; // width of variation around tlength
+    unsigned long tlength; // length of time this mode should be run
+    unsigned long variation; // width of variation around tlength
     int mode; // what mode
   public:
-    ModeInterval (int _mode, int _tlength);
-    ModeInterval (int _mode, int _tlength, int _variation);
+    ModeInterval (int _mode, unsigned long _tlength);
+    ModeInterval (int _mode, unsigned long _tlength, unsigned long _variation);
     void setNext( ModeInterval * _next);
     ModeInterval * getNext() ;
     int getMode();
-    int getTLength();
-    int getVariation();
+    unsigned long getTLength();
+    unsigned long getVariation();
     void print();
 };
 
@@ -84,6 +107,7 @@ typedef int Mode;
 #define MODE_RED 2
 #define MODE_BLUE 3
 #define MODE_GREEN 4
+#define MODE_RAINBOW 5
 
 char * modeString(Mode _m);
 
@@ -93,6 +117,7 @@ class ModeCode
   public:
     virtual void init(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor);
     virtual bool update(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor);
+    virtual void requestModeEnd();
     virtual void finish(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor);
     virtual char * whoIAm();
 };
@@ -143,20 +168,38 @@ class ModeDimGreyCode : public ModeCode
     bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC);
     char * whoIAm();
 };
+
+class ModeRainbowCode : public ModeCode
+{
+  private:
+    int state;
+    elapsedMillis t;
+    long t_wait;
+    HsvColor c0;
+    HsvColor c1;
+  public:
+    void init(PumpkinParms * pumpkinParms, PumpkinColor * pC);
+    bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC);
+    char * whoIAm();
+};
+
 class Pumpkin
 {
   private:
     int id;
 
     // set in constructor
-    PumpkinColor * pC;
     PumpkinParms * pP;
+    
+    PumpkinColor * pC;
 
+    // it would be cool to just create this when needed
     ModeNoneCode modeNoneCode;
     ModeRedCode modeRedCode;
     ModeBlueCode modeBlueCode;
     ModeGreenCode modeGreenCode;
     ModeDimGreyCode modeDimGreyCode;
+    ModeRainbowCode modeRainbowCode;
     
     // current state
     ModeCode * currentModeCode;
@@ -167,7 +210,8 @@ class Pumpkin
     Mode newMode;
 
     // do the next mode change after this time
-    unsigned long modeChangeMillis;
+    unsigned long lastModeChangeMillis;
+    unsigned long howLongToStayInMode;
 
   public:
     Pumpkin(int i, PumpkinParms * _pumpkinParms);
@@ -176,7 +220,6 @@ class Pumpkin
     PumpkinColor * getPumpkinColor();
     void setMode (Mode m);
     void update();
-
 };
 
 #endif

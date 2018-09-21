@@ -3,7 +3,8 @@
 #include "Pumpkin.h"
 #include "PumpkinLighters.h"
 
-#define N_PUMPKINS 4
+
+#define N_PUMPKINS 8
 
 #define YES
 
@@ -20,13 +21,14 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+
+  randomSeed(analogRead(0));
   
   for (int i = 0; i < N_PUMPKINS; i++) {
     pumpkinParms[i] = new PumpkinParms(i);
   }
 
-  pumpkinParms[0]->add(new ModeInterval(MODE_DIMGREY, 5000));
-  pumpkinParms[0]->add(new ModeInterval(MODE_RED, 5000, 5000));
+  pumpkinParms[0]->add(new ModeInterval(MODE_RAINBOW, ULONG_MAX));
 
 #ifdef DEBUG1
   Serial.println("mode 0 test");
@@ -39,19 +41,20 @@ void setup() {
   }
 #endif
   
-  pumpkinParms[1]->add(new ModeInterval(MODE_RED, 5000, 2000));
-  pumpkinParms[2]->add(new ModeInterval(MODE_BLUE, 1000));
-  pumpkinParms[3]->add(new ModeInterval(MODE_GREEN, 1000));
+  pumpkinParms[1]->add(new ModeInterval(MODE_RED, ULONG_MAX));
+  pumpkinParms[2]->add(new ModeInterval(MODE_BLUE, ULONG_MAX));
+  pumpkinParms[3]->add(new ModeInterval(MODE_GREEN, ULONG_MAX));
+  
+  pumpkinParms[4]->add(new ModeInterval(MODE_DIMGREY, 5000));
+  pumpkinParms[4]->add(new ModeInterval(MODE_RED, 5000, 5000));
+
+  pumpkinParms[7]->add(new ModeInterval(MODE_RAINBOW, ULONG_MAX));
 
   for (int i = 0; i < N_PUMPKINS; i++) {
     pumpkins[i] = new Pumpkin(i, pumpkinParms[i]);
+    pumpkinLighters[i] = new PumpkinLighter(&pixels, i, -1, -1);
   }
 
-  pumpkinLighters[0] = new PumpkinLighter(&pixels, 0, -1, -1);
-  pumpkinLighters[1] = new PumpkinLighter(&pixels, 1, -1, -1);
-  pumpkinLighters[2] = new PumpkinLighter(&pixels, 2, -1, -1);
-  pumpkinLighters[3] = new PumpkinLighter(&pixels, 3, -1, -1);
-//  pumpkinLighters[4] = new PumpkinLighter(&pixels, 4, -1, -1);
 
 #ifdef DEBUG1
   for (int i = 0; i < N_PUMPKINS; i++) {
@@ -75,9 +78,7 @@ void setup() {
   }
   pixels.show();
 
-  lastMillis = millis();
-
-  
+  lastMillis = millis();  
 }
 
 void loop() {
