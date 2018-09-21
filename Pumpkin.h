@@ -8,6 +8,82 @@
 
 #include "Debug.h"
 
+class ModeInterval {
+  private:
+    ModeInterval * next;
+    int tlength; // length of time this mode should be run
+    int variation; // width of variation around tlength
+    int mode; // what mode
+  public:
+    ModeInterval (int _mode, int _tlength) {
+      next = NULL;
+      mode = _mode;
+      tlength = _tlength;
+      variation = 0;
+    }
+    ModeInterval (int _mode, int _tlength, int _variation) {
+      next = NULL;
+      mode = _mode;
+      tlength = _tlength;
+      variation = _variation;
+    }
+    void setNext( ModeInterval * _next) {
+      next = _next;
+    }
+    ModeInterval * getNext() {
+      return next;
+    }
+    void print() {
+      Serial << "mode interval: " << mode << ", tlength: " << tlength << ", variation: " << variation;
+    }
+};
+
+class PumpkinParms {
+  private:
+    int id;
+    ModeInterval * firstMi; // beginning of LL
+    ModeInterval * lastMi; // end of LL
+    int nMi;
+  public:
+    PumpkinParms(int _id) {
+      id = _id;
+      firstMi = NULL;
+      lastMi = NULL;
+      nMi = 0;
+    }
+    void add (ModeInterval * _mi) {
+      if (lastMi == NULL) {
+        firstMi = _mi;
+        lastMi = _mi;
+      } else {
+        lastMi->setNext(_mi);
+        lastMi = _mi;
+      }
+      nMi++;
+    }
+    void print() {
+      Serial << "Pumpkin parms #" << id << "\r\n";
+      ModeInterval * t = firstMi;
+      while (t != NULL) {
+        t->print();
+        t = t->getNext();
+        Serial.println();
+      }
+    }
+    ModeInterval * getModeInterval(int _n) {
+      ModeInterval * t = firstMi;
+      int i = 0;
+      while (t != NULL && i < _n) {
+        t = t->getNext();
+        i++;
+      }
+      return t;
+    }
+    int modeIntervalCount() {
+      return nMi;
+    }
+};
+
 class PumpkinColor
 {
   public:
@@ -48,15 +124,6 @@ class PumpkinColor
       uv = 0;
     }
 
-};
-
-class PumpkinParms
-{
-  private:
-  public:
-    PumpkinParms()
-    {
-    }
 };
 
 int bumpAndLimit (int v, int b, int ll, int ul) {
@@ -213,6 +280,9 @@ class Pumpkin
     bool modeWasChanged;
     Mode newMode;
 
+    // do the next mpde change after this time
+    unsigned long modeChangeMillis;
+
   public:
     Pumpkin(int i, PumpkinParms * _pumpkinParms)
     {
@@ -223,6 +293,8 @@ class Pumpkin
 
       currentMode = MODE_NONE;
       currentModeCode = &modeNoneCode;
+
+      modeChangeMillis = millis();
 
       modeWasChanged = 0;
     }

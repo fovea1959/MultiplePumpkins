@@ -7,6 +7,7 @@
 #define N_PUMPKINS 4
 
 Pumpkin * pumpkins[N_PUMPKINS];
+PumpkinParms * pumpkinParms[N_PUMPKINS];
 PumpkinLighter * pumpkinLighters[N_PUMPKINS];
 unsigned long lastMillis;
 
@@ -20,14 +21,29 @@ void setup() {
   }
   
   for (int i = 0; i < N_PUMPKINS; i++) {
-    pumpkins[i] = new Pumpkin(i, new PumpkinParms());
+    pumpkinParms[i] = new PumpkinParms(i);
   }
 
-  pumpkins[0]->setMode(MODE_DIMGREY);
-  pumpkins[1]->setMode(MODE_RED);
-  pumpkins[2]->setMode(MODE_BLUE);
-  pumpkins[3]->setMode(MODE_GREEN);
-//  pumpkins[4]->setMode(MODE_DIMGREY);
+  pumpkinParms[0]->add(new ModeInterval(MODE_DIMGREY, 1000));
+  pumpkinParms[0]->add(new ModeInterval(MODE_RED, 1000));
+
+  Serial.println("mode 0 test");
+  pumpkinParms[0]->print();
+  Serial.println("retest");
+  for (int i = 0; i < pumpkinParms[0]->modeIntervalCount(); i++) {
+    Serial << "retest #" << i << ": ";
+    pumpkinParms[0]->getModeInterval(i)->print();
+    Serial.println();
+  }
+  
+  pumpkinParms[1]->add(new ModeInterval(MODE_RED, 1000));
+  pumpkinParms[2]->add(new ModeInterval(MODE_BLUE, 1000));
+  pumpkinParms[3]->add(new ModeInterval(MODE_GREEN, 1000));
+
+
+  for (int i = 0; i < N_PUMPKINS; i++) {
+    pumpkins[i] = new Pumpkin(i, pumpkinParms[i]);
+  }
 
   pumpkinLighters[0] = new PumpkinLighter(&pixels, 0, -1, -1);
   pumpkinLighters[1] = new PumpkinLighter(&pixels, 1, -1, -1);
@@ -59,16 +75,18 @@ void setup() {
   pixels.show();
 
   lastMillis = millis();
+
   
 }
 
 void loop() {
   unsigned long now = millis();
   if (now - lastMillis > 10) {
-    for (int i = 0; i < N_PUMPKINS; i++) {
+    int n_pumpkins = N_PUMPKINS;
+for (int i = 0; i < n_pumpkins; i++) {
       pumpkins[i] -> update();
     }
-    for (int i = 0; i < N_PUMPKINS; i++) {
+    for (int i = 0; i < n_pumpkins; i++) {
       PumpkinColor * pC = pumpkins[i]->getPumpkinColor();
       pumpkinLighters[i] -> update (pC);
     }
