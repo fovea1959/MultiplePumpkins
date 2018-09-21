@@ -1,8 +1,10 @@
 #ifndef Debug_h
 #define Debug_h
 
+#include <Arduino.h>
+
 // From https://playground.arduino.cc/Main/StreamingOutput
-template<class T> inline Print& operator<<(Print &obj, T arg)
+template<class T> inline Print &operator<<(Print &obj, T arg)
 {
   obj.print(arg);
   return obj;
@@ -18,7 +20,7 @@ class DummyStream {
       (void) arg;
       return *this;
     }
-} Debug;
+};
 #endif
 
 #endif

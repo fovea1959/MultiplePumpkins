@@ -8,44 +8,7 @@
 
 #include "Debug.h"
 
-class ModeInterval {
-  private:
-    ModeInterval * next;
-    int tlength; // length of time this mode should be run
-    int variation; // width of variation around tlength
-    int mode; // what mode
-  public:
-    ModeInterval (int _mode, int _tlength) {
-      next = NULL;
-      mode = _mode;
-      tlength = _tlength;
-      variation = 0;
-    }
-    ModeInterval (int _mode, int _tlength, int _variation) {
-      next = NULL;
-      mode = _mode;
-      tlength = _tlength;
-      variation = _variation;
-    }
-    void setNext( ModeInterval * _next) {
-      next = _next;
-    }
-    ModeInterval * getNext() {
-      return next;
-    }
-    int getMode() {
-      return mode;
-    }
-    int getTLength() {
-      return tlength;
-    }
-    int getVariation() {
-      return variation;
-    }
-    void print() {
-      Serial << "mode interval: " << mode << ", tlength: " << tlength << ", variation: " << variation;
-    }
-};
+#include "ModeInterval.h"
 
 class PumpkinParms {
   private:
