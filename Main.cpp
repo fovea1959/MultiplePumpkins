@@ -82,7 +82,7 @@ void setup() {
 void loop() {
   unsigned long now = millis();
   if (now - lastMillis > 10) {
-    int n_pumpkins = N_PUMPKINS;
+    int n_pumpkins = 1;
 for (int i = 0; i < n_pumpkins; i++) {
       pumpkins[i] -> update();
     }

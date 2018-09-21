@@ -33,6 +33,15 @@ class ModeInterval {
     ModeInterval * getNext() {
       return next;
     }
+    int getMode() {
+      return mode;
+    }
+    int getTLength() {
+      return tlength;
+    }
+    int getVariation() {
+      return variation;
+    }
     void print() {
       Serial << "mode interval: " << mode << ", tlength: " << tlength << ", variation: " << variation;
     }
@@ -78,6 +87,10 @@ class PumpkinParms {
         i++;
       }
       return t;
+    }
+    ModeInterval * getRandomModeInterval() {
+      int i = random(nMi);
+      return getModeInterval(i);
     }
     int modeIntervalCount() {
       return nMi;
@@ -147,6 +160,28 @@ typedef int Mode;
 //#define MODE_WHITE 4
 #define MODE_TOOHIGH 5
 
+char * modeString(Mode _m) {
+  switch (_m) {
+    case MODE_NONE:
+      return "NONE";
+      break;
+    case MODE_DIMGREY:
+      return "DIMGREY";
+      break;
+    case MODE_RED:
+      return "RED";
+      break;
+    case MODE_BLUE:
+      return "BLUE";
+      break;
+    case MODE_GREEN:
+      return "GREEN";
+      break;
+    default:
+      return "Unknown";
+  } 
+}
+
 // generic superclass
 class ModeCode
 {
@@ -162,7 +197,7 @@ class ModeNoneCode : public ModeCode
   public:
     bool loop(PumpkinParms * pumpkinParms, PumpkinColor * pumpkinColor) {
       pumpkinColor->clear();
-      return 1; // switch modes
+      return true; // switch modes
     }
     void printWhoIAm() { Serial.println ("None"); };
 };
@@ -183,8 +218,7 @@ class ModeRedCode : public ModeCode
       if (counter <= 0 || counter >= 255) {
         direction = -direction;
       }
-
-      return false;
+      return counter <= 0;
     }
     void printWhoIAm() { Serial.println ("Red Code"); };
 };
@@ -207,7 +241,7 @@ class ModeBlueCode : public ModeCode
         direction = -direction;
       }
 
-      return false;
+      return counter <= 0;
     }
     void printWhoIAm() { Serial.println ("Blue Code"); };
 };
@@ -230,7 +264,7 @@ class ModeGreenCode : public ModeCode
         direction = -direction;
       }
 
-      return false;
+      return counter <= 0;
     }
     void printWhoIAm() { Serial.println ("Green Code"); };
 };
@@ -245,14 +279,16 @@ class ModeDimGreyCode : public ModeCode
       startMillis = millis();
     }
     bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
-      pC->clear();
       unsigned long elapsedMillis = millis() - startMillis;
+      pC->clear();
+      
       if (elapsedMillis % 1000 > 500) {
        pC->setR(16);
        pC->setG(16);
        pC->setB(16);
+       return false;
       }
-      return false;
+      return true;
     }
     void printWhoIAm() { Serial.println ("DimGrey Code"); };
 };
@@ -294,9 +330,9 @@ class Pumpkin
       currentMode = MODE_NONE;
       currentModeCode = &modeNoneCode;
 
-      modeChangeMillis = millis();
-
-      modeWasChanged = 0;
+      newMode = MODE_NONE;
+      modeWasChanged = 1;
+      modeChangeMillis = 0;
     }
 
     int getId() {
@@ -322,6 +358,7 @@ class Pumpkin
       unsigned long currentMillis = millis();
 
       if (modeWasChanged) {
+        Serial << "mode was changed. setting up for mode " << newMode << " " << modeString(newMode) << "\r\n";
         currentModeCode->finish(pP, pC);
         switch (newMode) {
           case MODE_NONE:
@@ -340,8 +377,7 @@ class Pumpkin
             currentModeCode = &modeDimGreyCode;
             break;
           default:
-            Serial.print("unhandled newMode: ");
-            Serial.println(currentMode);
+            Serial << "unhandled newMode: " <<  currentMode << "\r\n";
             currentModeCode = &modeNoneCode;
         } 
         currentMode = newMode;
@@ -349,11 +385,33 @@ class Pumpkin
         modeWasChanged = 0;
       }
 
-      bool changeMode = currentModeCode->update(pP, pC);
-      // currentModeCode->printWhoIAm();
-      if (changeMode) {
-        // need to look at current enabled modes and do a setMode on
-        // on the next eligible one. if none are eligible, then use MODE_NONE
+      if (false) {
+        Serial << "running: ";
+        currentModeCode->printWhoIAm();
+      }
+      
+      bool okToChange = currentModeCode->update(pP, pC);
+
+      if (false) {
+        Serial << "colors: ";
+        pC->print();
+        Serial.println();
+      }
+      
+      if (okToChange && (currentMillis > modeChangeMillis)) {
+        Serial << "ok to change: " << okToChange << ", current millis = " << currentMillis << ", mode change millis: " << modeChangeMillis << "\r\n";
+        ModeInterval * mi = pP->getRandomModeInterval();
+        
+        Serial << "got modeInterval ";
+        mi->print();
+        Serial.println();
+
+        modeWasChanged = 1;
+        newMode = mi-> getMode();
+        int tlength = mi -> getTLength();
+        int variation = mi -> getVariation();
+        modeChangeMillis = currentMillis + tlength + random(variation);
+        Serial << "mode " << newMode << modeString(newMode) << " was picked, next change at " << modeChangeMillis << "\r\n";
       }
 
     }
