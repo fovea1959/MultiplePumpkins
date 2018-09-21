@@ -1,8 +1,7 @@
 #include <Arduino.h>
 
-#include "Debug.h"
-#include "PumpkinLighters.h"
 #include "Pumpkin.h"
+#include "PumpkinLighters.h"
 
 #define N_PUMPKINS 4
 

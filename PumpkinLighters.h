@@ -5,8 +5,7 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
-#include "PumpkinColor.h"
-#include "Debug.h"
+#include "Pumpkin.h"
 
 // #define DEBUG_LIGHTERS
 

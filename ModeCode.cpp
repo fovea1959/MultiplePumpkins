@@ -1,6 +1,5 @@
 #include <Arduino.h>
-#include "ModeCode.h"
-#include "PumpkinColor.h"
+#include "Pumpkin.h"
 
 int bumpAndLimit (int v, int b, int ll, int ul) {
   v += b;
