@@ -181,7 +181,8 @@ class ModeDimGreyCode : public ModeCode
     }
     bool update(PumpkinParms * pumpkinParms, PumpkinColor * pC) {
       pC->clear();
-      int elapsedMillis = millis() - startMillis;
+      unsigned long elapsedMillis = millis() - startMillis;
+      Serial << "unsigned millis: " << elapsedMillis << "\r\n";
       if (elapsedMillis % 1000 > 500) {
        pC->setR(16);
        pC->setG(16);

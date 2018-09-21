@@ -28,10 +28,10 @@ void setup() {
   pumpkins[3]->setMode(MODE_GREEN);
 //  pumpkins[4]->setMode(MODE_DIMGREY);
 
-  pumpkinLighters[0] = new PumpkinLighter(&pixels, 1, -1, -1);
-  pumpkinLighters[1] = new PumpkinLighter(&pixels, 2, -1, -1);
-  pumpkinLighters[2] = new PumpkinLighter(&pixels, 3, -1, -1);
-  pumpkinLighters[3] = new PumpkinLighter(&pixels, 4, -1, -1);
+  pumpkinLighters[0] = new PumpkinLighter(&pixels, 0, -1, -1);
+  pumpkinLighters[1] = new PumpkinLighter(&pixels, 1, -1, -1);
+  pumpkinLighters[2] = new PumpkinLighter(&pixels, 2, -1, -1);
+  pumpkinLighters[3] = new PumpkinLighter(&pixels, 3, -1, -1);
 //  pumpkinLighters[4] = new PumpkinLighter(&pixels, 4, -1, -1);
 
   for (int i = 0; i < N_PUMPKINS; i++) {
